@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Termos Launcher
+Exec=/usr/bin/termos-launcher
+Path=/usr/share/termos-launcher/
+Icon=termos-launcher
+Terminal=false
+Categories=Utility;System;
+Keywords=launcher;termos;apps;
+StartupNotify=true

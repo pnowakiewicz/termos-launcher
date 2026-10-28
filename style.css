@@ -1,0 +1,66 @@
+window {
+    background-color: #11141a;
+}
+
+/* Sekcja 1: Tytuł (sam kontener bez stylizacji samego obrazka thumbnail) */
+.header-box {
+    padding: 16px 20px;
+    border-bottom: 1px solid #202633;
+}
+
+.app-card {
+    background-color: #171b24;
+    border: 1px solid #252e3d;
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+}
+
+.app-card:hover {
+    background-color: #1d232f;
+    border-color: #3b475c;
+}
+
+.app-name {
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+.app-desc {
+    color: #7b889b;
+    font-size: 11px;
+}
+
+.btn-start {
+    background-color: #10b981;
+    color: #ffffff;
+    font-weight: bold;
+    border-radius: 6px;
+    padding: 6px 18px;
+    border: none;
+}
+
+.btn-start:hover {
+    background-color: #059669;
+}
+
+.btn-download {
+    background-color: #2563eb;
+    color: #ffffff;
+    font-weight: bold;
+    border-radius: 6px;
+    padding: 6px 18px;
+    border: none;
+}
+
+.btn-download:hover {
+    background-color: #1d4ed8;
+}
+
+.btn-busy {
+    background-color: #4b5563;
+    color: #9ca3af;
+    border-radius: 6px;
+    padding: 6px 18px;
+}
