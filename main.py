@@ -37,7 +37,15 @@ APPS_CONFIG = [
         "package": "cliamp",
         "desc": "Terminal Music Player",
         "icon": "cliamp.png"
+    },
+    {
+        "name": "Nuclear",
+        "binary": "nuclear-player-bin",
+        "package": "nuclear-player-bin",
+        "desc": "Music Player",
+        "icon": "nuclear.png"
     }
+
 ]
 
 
@@ -262,7 +270,7 @@ class TermosLauncher(Gtk.Window):
     def on_install_clicked(self, btn, buttons, app, pkg_name):
         if not self.mgr:
             return
-        self.set_buttons_busy(buttons, btn, "Pobieranie...")
+        self.set_buttons_busy(buttons, btn, "Downloading...")
 
         ask_pass = "pkexec" if shutil.which("pkexec") else "sudo"
         if self.mgr == "yay":
@@ -273,12 +281,12 @@ class TermosLauncher(Gtk.Window):
             cmd = [ask_pass, "apt-get", "install", "-y", pkg_name]
 
         self.run_package_command(cmd, buttons, app, pkg_name,
-                                 f"Pomyślnie zainstalowano {app['name']}!", "Błąd instalacji")
+                                 f"Download of {app['name']} finished!", "Download error")
 
     def on_update_clicked(self, btn, buttons, app, pkg_name):
         if not self.mgr:
             return
-        self.set_buttons_busy(buttons, btn, "Aktualizacja...")
+        self.set_buttons_busy(buttons, btn, "Updating...")
 
         ask_pass = "pkexec" if shutil.which("pkexec") else "sudo"
         if self.mgr == "yay":
@@ -289,12 +297,12 @@ class TermosLauncher(Gtk.Window):
             cmd = [ask_pass, "apt-get", "install", "--only-upgrade", "-y", pkg_name]
 
         self.run_package_command(cmd, buttons, app, pkg_name,
-                                 f"Zaktualizowano {app['name']}!", "Błąd aktualizacji")
+                                 f"Updated {app['name']}!", "Update Error")
 
     def on_remove_clicked(self, btn, buttons, app, pkg_name):
         if not self.mgr:
             return
-        self.set_buttons_busy(buttons, btn, "Usuwanie...")
+        self.set_buttons_busy(buttons, btn, "Deleting...")
 
         ask_pass = "pkexec" if shutil.which("pkexec") else "sudo"
         if self.mgr in ["yay", "pacman"]:
@@ -303,7 +311,7 @@ class TermosLauncher(Gtk.Window):
             cmd = [ask_pass, "apt-get", "purge", "--autoremove", "-y", pkg_name]
 
         self.run_package_command(cmd, buttons, app, pkg_name,
-                                 f"Pomyślnie usunięto {app['name']}.", "Błąd usuwania")
+                                 f"Deleted {app['name']}.", "Deletion Error")
 
 
 if __name__ == "__main__":
