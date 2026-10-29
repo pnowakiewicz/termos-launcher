@@ -2,7 +2,6 @@ window {
     background-color: #11141a;
 }
 
-/* Sekcja 1: Tytuł (sam kontener bez stylizacji samego obrazka thumbnail) */
 .header-box {
     padding: 16px 20px;
     border-bottom: 1px solid #202633;
@@ -11,9 +10,9 @@ window {
 .app-card {
     background-color: #171b24;
     border: 1px solid #252e3d;
-    border-radius: 10px;
-    padding: 10px 14px;
-    margin-bottom: 8px;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
 }
 
 .app-card:hover {
@@ -23,22 +22,31 @@ window {
 
 .app-name {
     color: #ffffff;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: bold;
 }
 
 .app-desc {
     color: #7b889b;
-    font-size: 11px;
+    font-size: 12px;
+}
+
+.btn-action {
+    border-radius: 70px;
+    min-width: 140px;
+    min-height: 140px;
+    padding: 0;
+    margin: 0;
+    border: none;
+    outline: none;
+    box-shadow: none;
+    font-weight: bold;
+    font-size: 15px;
 }
 
 .btn-start {
     background-color: #10b981;
     color: #ffffff;
-    font-weight: bold;
-    border-radius: 6px;
-    padding: 6px 18px;
-    border: none;
 }
 
 .btn-start:hover {
@@ -48,19 +56,38 @@ window {
 .btn-download {
     background-color: #2563eb;
     color: #ffffff;
-    font-weight: bold;
-    border-radius: 6px;
-    padding: 6px 18px;
-    border: none;
 }
 
 .btn-download:hover {
     background-color: #1d4ed8;
 }
 
+.btn-update {
+    background-color: #f59e0b;
+    color: #ffffff;
+}
+
+.btn-update:hover {
+    background-color: #d97727;
+}
+
+.btn-remove {
+    background-color: #ef4444;
+    color: #ffffff;
+}
+
+.btn-remove:hover {
+    background-color: #dc2626;
+}
+
+.btn-action:disabled {
+    background-color: #2b3342;
+    color: #6b7280;
+    opacity: 0.35;
+}
+
 .btn-busy {
     background-color: #4b5563;
-    color: #9ca3af;
-    border-radius: 6px;
-    padding: 6px 18px;
+    color: #ffffff;
+    opacity: 0.85;
 }

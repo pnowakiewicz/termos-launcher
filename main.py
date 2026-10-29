@@ -9,7 +9,6 @@ from gi.repository import Gtk, Gdk, GLib
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-# Tutaj podaj nazwy swoich plików .png dla poszczególnych programów:
 APPS_CONFIG = [
     {
         "name": "Mozilla Firefox",
@@ -31,6 +30,13 @@ APPS_CONFIG = [
         "package": "aseprite",
         "desc": "Pixel Art Editor",
         "icon": "aseprite.png"
+    },
+    {
+        "name": "Cliamp",
+        "binary": "cliamp",
+        "package": "cliamp",
+        "desc": "Terminal Music Player",
+        "icon": "cliamp.png"
     }
 ]
 
@@ -65,7 +71,7 @@ class SystemManager:
 class TermosLauncher(Gtk.Window):
     def __init__(self):
         super().__init__(title="Termos Launcher")
-        self.set_default_size(580, 680)
+        self.set_default_size(800, 750)
         self.set_position(Gtk.WindowPosition.CENTER)
         self.mgr = SystemManager.get_preferred_manager()
 
@@ -74,9 +80,6 @@ class TermosLauncher(Gtk.Window):
         main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
         self.add(main_box)
 
-        # =========================================================
-        # SEKCJA 1: Tytuł (Twój thumbnail.png bez stylów i dodatków)
-        # =========================================================
         header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
         header.get_style_context().add_class("header-box")
 
@@ -84,13 +87,10 @@ class TermosLauncher(Gtk.Window):
             thumb_img = Gtk.Image.new_from_file("thumbnail.png")
             header.pack_start(thumb_img, False, False, 0)
         else:
-            header.pack_start(Gtk.Label(label="[Brak thumbnail.png w katalogu]", xalign=0), False, False, 0)
+            header.pack_start(Gtk.Label(label="[Zrob kiedys thumbnail!!!]", xalign=0), False, False, 0)
 
         main_box.pack_start(header, False, False, 0)
 
-        # =========================================================
-        # SEKCJA 2: Guziki programów (Miniatury po lewej, Start/Download po prawej)
-        # =========================================================
         scroller = Gtk.ScrolledWindow()
         scroller.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         main_box.pack_start(scroller, True, True, 0)
@@ -117,16 +117,15 @@ class TermosLauncher(Gtk.Window):
         )
 
     def create_app_card(self, app):
-        card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=14)
+        card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=16)
         card.get_style_context().add_class("app-card")
 
-        # 1. Miniatura programu po LEWEJ stronie (Twój plik .png)
         if os.path.exists(app["icon"]):
             icon_img = Gtk.Image.new_from_file(app["icon"])
             card.pack_start(icon_img, False, False, 0)
 
-        # 2. Nazwa i opis programu
-        info = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        info = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        info.set_valign(Gtk.Align.CENTER)
         lbl_name = Gtk.Label(label=app["name"], xalign=0)
         lbl_name.get_style_context().add_class("app-name")
         lbl_desc = Gtk.Label(label=app["desc"], xalign=0)
@@ -135,84 +134,176 @@ class TermosLauncher(Gtk.Window):
         info.pack_start(lbl_desc, False, False, 0)
         card.pack_start(info, True, True, 0)
 
-        # 3. Przycisk po PRAWEJ stronie (Download / Start)
-        btn = Gtk.Button()
+        btn_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=14)
+        btn_box.set_valign(Gtk.Align.CENTER)
+        btn_box.set_homogeneous(False)
+
+        btn_main = Gtk.Button()
+        btn_update = Gtk.Button(label="Update")
+        btn_remove = Gtk.Button(label="Remove")
+
+        for b in (btn_main, btn_update, btn_remove):
+            b.set_size_request(140, 140)
+            b.set_halign(Gtk.Align.CENTER)
+            b.set_valign(Gtk.Align.CENTER)
+            b.get_style_context().add_class("btn-action")
+
+        btn_update.get_style_context().add_class("btn-update")
+        btn_remove.get_style_context().add_class("btn-remove")
+
+        btn_box.pack_start(btn_main, False, False, 0)
+        btn_box.pack_start(btn_update, False, False, 0)
+        btn_box.pack_start(btn_remove, False, False, 0)
+
+        card.pack_end(btn_box, False, False, 0)
+
         pkg = app["package"]
         pkg_name = pkg.get(self.mgr, app["binary"]) if isinstance(pkg, dict) else pkg
 
-        self.update_button(btn, app, pkg_name)
-        card.pack_end(btn, False, False, 0)
+        buttons = {
+            "main": btn_main,
+            "update": btn_update,
+            "remove": btn_remove
+        }
 
+        self.update_ui_state(buttons, app, pkg_name)
         return card
 
-    def update_button(self, btn, app, pkg_name):
-        ctx = btn.get_style_context()
-        ctx.remove_class("btn-start")
-        ctx.remove_class("btn-download")
-        ctx.remove_class("btn-busy")
+    def update_ui_state(self, buttons, app, pkg_name):
+        btn_main = buttons["main"]
+        btn_update = buttons["update"]
+        btn_remove = buttons["remove"]
 
-        if SystemManager.is_installed(app["binary"], pkg_name):
-            btn.set_label("▶ Start")
-            ctx.add_class("btn-start")
-            btn.set_sensitive(True)
-            try: btn.disconnect_by_func(self.on_start_clicked)
+        for b in (btn_main, btn_update, btn_remove):
+            b.get_style_context().remove_class("btn-busy")
+            try: b.disconnect_by_func(self.on_start_clicked)
             except Exception: pass
-            try: btn.disconnect_by_func(self.on_download_clicked)
+            try: b.disconnect_by_func(self.on_install_clicked)
             except Exception: pass
-            btn.connect("clicked", self.on_start_clicked, app["binary"])
+            try: b.disconnect_by_func(self.on_update_clicked)
+            except Exception: pass
+            try: b.disconnect_by_func(self.on_remove_clicked)
+            except Exception: pass
+
+        ctx_main = btn_main.get_style_context()
+        ctx_main.remove_class("btn-start")
+        ctx_main.remove_class("btn-download")
+
+        btn_update.set_label("Update")
+        btn_remove.set_label("Remove")
+
+        installed = SystemManager.is_installed(app["binary"], pkg_name)
+
+        if installed:
+            btn_main.set_label("▶ Start")
+            ctx_main.add_class("btn-start")
+            btn_main.set_sensitive(True)
+            btn_main.connect("clicked", self.on_start_clicked, app["binary"])
+
+            btn_update.set_sensitive(True)
+            btn_update.connect("clicked", self.on_update_clicked, buttons, app, pkg_name)
+
+            btn_remove.set_sensitive(True)
+            btn_remove.connect("clicked", self.on_remove_clicked, buttons, app, pkg_name)
         else:
-            btn.set_label("⬇ Download")
-            ctx.add_class("btn-download")
-            btn.set_sensitive(True)
-            try: btn.disconnect_by_func(self.on_start_clicked)
-            except Exception: pass
-            try: btn.disconnect_by_func(self.on_download_clicked)
-            except Exception: pass
-            btn.connect("clicked", self.on_download_clicked, app, pkg_name)
+            btn_main.set_label("⬇ Download")
+            ctx_main.add_class("btn-download")
+            btn_main.set_sensitive(True)
+            btn_main.connect("clicked", self.on_install_clicked, buttons, app, pkg_name)
+
+            btn_update.set_sensitive(False)
+            btn_remove.set_sensitive(False)
 
     def on_start_clicked(self, btn, binary_name):
         try:
             subprocess.Popen([binary_name])
         except Exception as e:
-            dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR, Gtk.ButtonsType.OK, f"Błąd:\n{e}")
+            dialog = Gtk.MessageDialog(
+                parent=self,
+                modal=True,
+                destroy_with_parent=True,
+                message_type=Gtk.MessageType.ERROR,
+                buttons=Gtk.ButtonsType.OK,
+                text=f"Błąd uruchamiania:\n{e}"
+            )
             dialog.run()
             dialog.destroy()
 
-    def on_download_clicked(self, btn, app, pkg_name):
-        if not self.mgr:
-            dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.WARNING, Gtk.ButtonsType.OK, "Brak menedżera pakietów.")
-            dialog.run()
-            dialog.destroy()
-            return
+    def set_buttons_busy(self, buttons, active_btn, status_text):
+        for b in buttons.values():
+            b.set_sensitive(False)
+        active_btn.set_label(status_text)
+        active_btn.get_style_context().add_class("btn-busy")
 
-        btn.set_label("Instalacja...")
-        btn.set_sensitive(False)
-        btn.get_style_context().remove_class("btn-download")
-        btn.get_style_context().add_class("btn-busy")
-
+    def run_package_command(self, cmd, buttons, app, pkg_name, success_msg, err_title):
         def worker():
-            ask_pass = "pkexec" if shutil.which("pkexec") else "sudo"
-            if self.mgr == "yay":
-                cmd = ["yay", "-S", "--noconfirm", pkg_name]
-            elif self.mgr == "pacman":
-                cmd = [ask_pass, "pacman", "-S", "--noconfirm", pkg_name]
-            elif self.mgr == "apt":
-                cmd = [ask_pass, "apt-get", "install", "-y", pkg_name]
-
             res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             success = (res.returncode == 0)
 
             def update_ui():
-                self.update_button(btn, app, pkg_name)
+                self.update_ui_state(buttons, app, pkg_name)
                 msg_type = Gtk.MessageType.INFO if success else Gtk.MessageType.ERROR
-                msg_txt = f"Zainstalowano {app['name']}!" if success else f"Błąd:\n{res.stderr[:200]}"
-                dialog = Gtk.MessageDialog(self, 0, msg_type, Gtk.ButtonsType.OK, msg_txt)
+                msg_txt = success_msg if success else f"{err_title}:\n{res.stderr[:200]}"
+                dialog = Gtk.MessageDialog(
+                    parent=self,
+                    modal=True,
+                    destroy_with_parent=True,
+                    message_type=msg_type,
+                    buttons=Gtk.ButtonsType.OK,
+                    text=msg_txt
+                )
                 dialog.run()
                 dialog.destroy()
 
             GLib.idle_add(update_ui)
 
         threading.Thread(target=worker, daemon=True).start()
+
+    def on_install_clicked(self, btn, buttons, app, pkg_name):
+        if not self.mgr:
+            return
+        self.set_buttons_busy(buttons, btn, "Pobieranie...")
+
+        ask_pass = "pkexec" if shutil.which("pkexec") else "sudo"
+        if self.mgr == "yay":
+            cmd = ["yay", "-S", "--noconfirm", pkg_name]
+        elif self.mgr == "pacman":
+            cmd = [ask_pass, "pacman", "-S", "--noconfirm", pkg_name]
+        elif self.mgr == "apt":
+            cmd = [ask_pass, "apt-get", "install", "-y", pkg_name]
+
+        self.run_package_command(cmd, buttons, app, pkg_name,
+                                 f"Pomyślnie zainstalowano {app['name']}!", "Błąd instalacji")
+
+    def on_update_clicked(self, btn, buttons, app, pkg_name):
+        if not self.mgr:
+            return
+        self.set_buttons_busy(buttons, btn, "Aktualizacja...")
+
+        ask_pass = "pkexec" if shutil.which("pkexec") else "sudo"
+        if self.mgr == "yay":
+            cmd = ["yay", "-S", "--noconfirm", pkg_name]
+        elif self.mgr == "pacman":
+            cmd = [ask_pass, "pacman", "-S", "--noconfirm", pkg_name]
+        elif self.mgr == "apt":
+            cmd = [ask_pass, "apt-get", "install", "--only-upgrade", "-y", pkg_name]
+
+        self.run_package_command(cmd, buttons, app, pkg_name,
+                                 f"Zaktualizowano {app['name']}!", "Błąd aktualizacji")
+
+    def on_remove_clicked(self, btn, buttons, app, pkg_name):
+        if not self.mgr:
+            return
+        self.set_buttons_busy(buttons, btn, "Usuwanie...")
+
+        ask_pass = "pkexec" if shutil.which("pkexec") else "sudo"
+        if self.mgr in ["yay", "pacman"]:
+            cmd = [ask_pass, "pacman", "-Rns", "--noconfirm", pkg_name]
+        elif self.mgr == "apt":
+            cmd = [ask_pass, "apt-get", "purge", "--autoremove", "-y", pkg_name]
+
+        self.run_package_command(cmd, buttons, app, pkg_name,
+                                 f"Pomyślnie usunięto {app['name']}.", "Błąd usuwania")
 
 
 if __name__ == "__main__":
